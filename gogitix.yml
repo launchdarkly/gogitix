@@ -1,0 +1,23 @@
+- reformat:
+    check: goimports -l -local github.com/launchdarkly/gogitix {{ ._files_ }}
+    format: goimports -w -local github.com/launchdarkly/gogitix {{ ._files_ }}
+- parallel:
+    {{ if gt (len .packages) 0 }}
+    - run: staticcheck {{ ._packages_ }}
+    {{ end }}
+    {{ if gt (len .dirs) 0 }}
+    - run:
+        name: go vet
+        command: go tool vet -composites=false {{ ._dirs_ }}
+    {{ end }}
+    - run:
+        - description: Verify that govendor is consistent
+          command: govendor sync -n
+          expect_silence: true
+        - description: Verify that govendor status is ok
+          command: govendor status
+    - run:
+        name: gotest compile
+        description: Compiling and initializing tests (but not running them)
+        command: |
+          go test -run non-existent-test-name {{ ._packages_ }}

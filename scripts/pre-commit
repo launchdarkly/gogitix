@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Note that this builds in the git root rather than the index
+go install ./... || exit 1
+
+# Get stdin from tty
+exec < /dev/tty
+
+# Run default checks
+gogitix
+
+# Run custom checks
+exec gogitix gogitix.yml
+
