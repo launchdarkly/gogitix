@@ -5,6 +5,8 @@
     - run:
         command: |
           (govendor list +outside | grep -v "^ ex") || true
+        name: govendor list +outside
+        description: Check for unvendorized external dependencies
         expect_silence: true
     {{ if gt (len .packages) 0 }}
     - run: staticcheck {{ ._packages_ }}
