@@ -5,6 +5,8 @@ import (
 )
 
 func RunCheck(ws Workspace, executor Executor, check Check, err chan<- error) {
+	defer close(err)
+
 	switch check := check.(type) {
 	case SingleCheck:
 		err <- executor.Execute(ws, check.Command)
@@ -13,16 +15,31 @@ func RunCheck(ws Workspace, executor Executor, check Check, err chan<- error) {
 	case ManyChecks:
 		wg := sync.WaitGroup{}
 		childErrs := make([]chan error, len(check.Checks))
+		stopEarly := make(chan error, 1)
+	OUTER:
 		for i, childCheck := range check.Checks {
-			childErrs[i] = make(chan error)
+
+			// Stop if we've had a failure already
+			select {
+			case <-stopEarly:
+				break OUTER
+			default:
+			}
+
+			childErr := make(chan error)
+			childErrs[i] = childErr
 			wg.Add(1)
+
 			go func() {
 				for {
-					if childErr, ok := <-childErrs[i]; !ok {
+					if childErr, ok := <-childErr; ok {
+						err <- childErr // Forward errors to the parent
+						if childErr != nil {
+							stopEarly <- childErr
+						}
+					} else {
 						wg.Done()
 						break
-					} else {
-						err <- childErr // Forward errors to the parent
 					}
 				}
 			}()
@@ -33,5 +50,4 @@ func RunCheck(ws Workspace, executor Executor, check Check, err chan<- error) {
 		}
 		wg.Wait()
 	}
-	close(err)
 }

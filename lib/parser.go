@@ -83,6 +83,7 @@ func (p Parser) Parse(check interface{}, path string) (Check, error) {
 		}
 
 		cmd.Name = p.makeNumberedName(cmd.Name, cmd.Command)
+		cmd.Path = path
 
 		return SingleCheck{
 			Command: cmd,
