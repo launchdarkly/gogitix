@@ -44,6 +44,7 @@ jobs:
           trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
           govendor test +local,^prog | tee ${TEST_RESULTS}/go-test.out 2>&1
 
+      - run: go install ./...
       - run: gogitix
       - run: gogitix gogitix.yml
 
