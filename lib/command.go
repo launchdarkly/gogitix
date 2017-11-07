@@ -6,5 +6,4 @@ type Command struct {
 	Description   string `yaml:"description"`
 	ExpectSilence bool   `yaml:"expect_silence"`
 	Number        int    `yaml:"-"`
-	Path          string `yaml:"-"`
 }
