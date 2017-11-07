@@ -2,17 +2,21 @@
 
 Gogitix is a tool for writing git pre-commit checks for golang.  It allows you to run a sequence of commands on the changes in your git index by checking out those files to a separate workarea.
 
+## Installation
+
 Install it with:
 
 ```
 go get -u github.com/launchdarkly/gogitix
 ```
 
-Run it with:
+Run it on your git index with:
 
 ```
 gogitix [<config file name>.yml]
 ```
+
+## Configuration
 
 The config file must be a YAML file with a syntax similar that used by CircleCI.
 The config file is passed through the golang text template processor.  By default, it will run a file that looks like:
@@ -78,3 +82,18 @@ There is also a special interactive command called "reformat".  Reformat takes t
 
 `reformat` will update the files in the workarea and copy them back to your git directory.  It will abort this operation if you have local changes that differ from what is in the git index.
 
+
+## Setting up your pre-commit hook
+
+```
+#!/usr/bin/env bash
+
+# Skip this if no non-vendor go files have changed
+changed_files=$(git diff --cached --name-only --diff-filter=ACDMR -- '*.go')
+[ -n "$changed_files" ] || exit 0
+
+# Include this if you want to use "reformat" 
+# exec < /dev/tty
+
+exec gogitix gogitix.yml
+``` 
