@@ -1,0 +1,42 @@
+version: 2
+
+# Keep this at the top to reduce noise in chatrooms when we mess up circleci setup
+experimental:
+  notify:
+    branches:
+      only:
+        - master
+jobs:
+  go-test:
+    docker:
+      - image: circleci/golang:latest
+
+    steps:
+      - checkout
+
+      - run: >
+          go get
+            github.com/GoASTScanner/gas
+            github.com/jstemmer/go-junit-report
+            github.com/kardianos/govendor
+            golang.org/x/tools/cmd/goimports
+            honnef.co/go/tools/cmd/staticcheck
+
+      # Source code checks
+      - run: |
+          govendor status && exit 0
+          govendor sync -n  # Spit out any sync errors that may have caused the status failure
+          exit 1
+
+      - run: govendor tool vet -composites=false +local,^prog
+      - run: |
+          [ "$(goimports -l $(find . -type f -name '*.go' -not -path "*/vendor/*"))" == "" ] || false
+      - run: gas -skip=**vendor/** -exclude=G101,G104
+
+      - run: staticcheck $(govendor list -no-status +l +p)
+
+workflows:
+  version: 2
+  test_and_package:
+    jobs:
+      - go-test
