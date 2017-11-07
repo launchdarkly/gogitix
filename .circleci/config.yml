@@ -35,7 +35,7 @@ jobs:
       - run: govendor tool vet -composites=false +local,^prog
       - run: |
           [ "$(goimports -l $(find . -type f -name '*.go' -not -path "*/vendor/*"))" == "" ] || false
-      - run: gas -skip=**vendor/** -exclude=G101,G104
+      - run: gas -skip=**vendor/** -exclude=G101,G104 ./...
 
       - run: staticcheck $(govendor list -no-status +l +p)
 
