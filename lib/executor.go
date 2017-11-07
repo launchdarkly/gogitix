@@ -78,7 +78,11 @@ func (executor CommandExecutor) ExecuteWithOutput(ws Workspace, cmd Command) ([]
 	} else {
 		msg += " "
 	}
-	msg += cmd.Command
+	if strings.TrimSpace(cmd.Command) == "" {
+		msg += "<empty command>"
+	} else {
+		msg += cmd.Command
+	}
 	PrintCmdLine(INFO, cmd.Name, color, "%s", msg)
 
 	if executor.DryRun {

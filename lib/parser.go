@@ -116,7 +116,7 @@ func (p Parser) Parse(check interface{}, path string) (Check, error) {
 
 func (p Parser) makeNumberedName(name string, cmd string) string {
 	if name == "" {
-		if cmd == "" {
+		if strings.TrimSpace(cmd) == "" {
 			name = "<empty command>"
 		} else {
 			name = strings.Fields(cmd)[0]
