@@ -35,6 +35,11 @@ jobs:
 
       - run: staticcheck $(govendor list -no-status +l +p)
 
+      - run: govendor test +local,^prog
+
+      - run: gogitix
+      - run: gogitix gogitix.yml
+
 workflows:
   version: 2
   test_and_package:
