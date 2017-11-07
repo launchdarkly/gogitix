@@ -44,17 +44,22 @@ The config file is passed through the golang text template processor.  By defaul
 Several variables are provided by default:
 
 ```
-.files - an array of files that have been updated (and still exist)
-.packages - an array of packages that have been updated (and still exist)
-.dirs - an array of directories that have been updated (and still exist). Paths are relative
+.files - an array of files that have been updated (and still exist). Sorted alphabetically.
+.packages - an array of packages that have been updated (and still exist).  e.g. "github.com/launchdarkly/gogitix"
+.dirs - an array of directories that have been updated (and still exist). Paths are relative. Sorted alphabetically.
+.topDirs - an array of directories that have been updated (and still exist) with nested directories excluded. Paths are relative. Sorted alphabetically.
+.root - root directory for your git repository in the temporary workarea
+.gitRoot - root directory of your go source
+.workRoot -- root directory of the temporary workarea
 ```
 
-For your convenience there are also versions of these that are space separated:
+For your convenience there are also versions of the arrays that are space separated:
 
 ```
 _files_
 _packages_
 _dirs_
+_topDirs_
 ```
 
 The commands are:
@@ -65,7 +70,7 @@ The commands are:
 If the value of "run" is an object, it may have the following keys:
   * "name" - a name of the job to use as the prefix for output
   * "description" - a text description of the job
-  * "command" - a BASH shell command to run.  It is run in the context of "/bin/bash -e".
+  * "command" - a BASH shell command to run.  It is run in the context of `/bin/bash -e`.
 
 There is also a special interactive command called "reformat".  Reformat takes two keys:
   * "check" - a single (non-sequence) command used to check (typically `gofmt -l` or `goimports -l`).

@@ -16,8 +16,10 @@
           expect_silence: true
         - description: Verify that govendor status is ok
           command: govendor status
+    {{ if gt (len .packages) 0 }}
     - run:
         name: gotest compile
         description: Compiling and initializing tests (but not running them)
         command: |
           go test -run non-existent-test-name {{ ._packages_ }}
+    {{ end }}
