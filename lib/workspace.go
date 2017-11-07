@@ -45,6 +45,7 @@ func Start(gitRoot string) (Workspace, error) {
 	locallyChangedFiles := strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--name-only", "--diff-filter=ACMR", "--"}, GoPathSpec...)...))
 
 	updatedDirs := getUpdatedDirs()
+
 	updatedPackages := getUpdatedPackages(rootDir, rootPackage, updatedDirs)
 
 	if err := os.Chdir(rootDir); err != nil {
