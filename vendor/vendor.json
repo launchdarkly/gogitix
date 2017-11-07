@@ -15,6 +15,12 @@
 			"revisionTime": "2017-08-16T03:18:13Z"
 		},
 		{
+			"checksumSHA1": "U6lX43KDDlNOn+Z0Yyww+ZzHfFo=",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "fc9e8d8ef48496124e79ae0df75490096eccf6fe",
+			"revisionTime": "2017-03-22T23:44:13Z"
+		},
+		{
 			"checksumSHA1": "o20lmjzBQyKD5LfLZ3OhUoMkLds=",
 			"path": "gopkg.in/yaml.v2",
 			"revision": "25c4ec802a7d637f88d584ab26798e94ad14c13b",
