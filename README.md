@@ -9,7 +9,7 @@ Gogitix is a tool for writing git pre-commit checks for golang.  It allows you t
 Install it with:
 
 ```
-go get -u github.com/launchdarkly/gogitix
+go get -u github.com/launchdarkly/gogitix/...
 ```
 
 Run it on your git index with:
