@@ -42,7 +42,7 @@ jobs:
       - run: mkdir -p $TEST_RESULTS
       - run: |
           trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
-          govendor test +local,^prog
+          govendor test +local,^prog > ${TEST_RESULTS}/go-test.out
 
       - run: gogitix
       - run: gogitix gogitix.yml
