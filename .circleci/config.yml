@@ -10,6 +10,8 @@ jobs:
   go-test:
     docker:
       - image: circleci/golang:latest
+        environment:
+          TEST_RESULTS: /tmp/test-results
 
     working_directory: /go/src/github.com/launchdarkly/gogitix
 
@@ -37,10 +39,16 @@ jobs:
 
       - run: staticcheck $(govendor list -no-status +l +p)
 
-      - run: govendor test +local,^prog
+      - run: mkdir -p $TEST_RESULTS
+      - run: |
+          trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+          govendor test +local,^prog
 
       - run: gogitix
       - run: gogitix gogitix.yml
+
+      - store_test_results:
+          path: /tmp/test-results
 
 workflows:
   version: 2
