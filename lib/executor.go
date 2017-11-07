@@ -66,7 +66,7 @@ func (executor CommandExecutor) ExecuteWithOutput(ws Workspace, cmd Command) ([]
 	defer os.Remove(file.Name())
 
 	start := time.Now()
-	shellCmd := exec.Command("/bin/bash", file.Name())
+	shellCmd := exec.Command("/bin/bash", file.Name()) /* #nosec */
 
 	msg := "Running"
 	if cmd.Description != "" {
