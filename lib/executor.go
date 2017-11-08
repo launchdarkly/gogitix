@@ -98,10 +98,10 @@ func (executor CommandExecutor) ExecuteWithOutput(ws Workspace, cmd Command) ([]
 			err = errors.New("expected no output but output was present")
 		}
 		if err != nil {
-			PrintCmdLine(FAIL, cmd.Name, color, "Command:\n%s\nError: %s\nOutput:\n%s\nFAIL (%s)", cmd.Command, err, output, duration)
+			PrintCmdLine(FAIL, cmd.Name, color, "Command:\n%s\nError: %s\nOutput:\n%s\nFAIL (%0.3fs)", cmd.Command, err, output, seconds(duration))
 			os.Exit(1)
 		} else {
-			PrintCmdLine(PASS, cmd.Name, color, "PASS (%s)", duration)
+			PrintCmdLine(PASS, cmd.Name, color, "PASS (%0.3fs)", seconds(duration))
 		}
 	}
 	return output, nil

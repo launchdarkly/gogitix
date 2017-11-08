@@ -42,10 +42,10 @@ func MustRunTestCmd(msg string, name string, args ...string) {
 	output, err := cmd.CombinedOutput()
 	duration := time.Since(start)
 	if err != nil {
-		color.Red("Command: %s,\nError: %s\nOutput:\n%s\nFAIL (%s)", cmdDetails, err, output, duration)
+		color.Red("Command: %s,\nError: %s\nOutput:\n%s\nFAIL (%0.3fs)", cmdDetails, err, output, seconds(duration))
 		os.Exit(1)
 	} else {
-		color.Green("PASS (%s)", duration)
+		color.Green("PASS (%0.3fs)", seconds(duration))
 	}
 }
 
@@ -70,4 +70,8 @@ func RunCmd(name string, args ...string) (string, error) {
 	}
 	output, err := cmd.CombinedOutput()
 	return string(output), err
+}
+
+func seconds(duration time.Duration) float64 {
+	return float64(duration) / float64(time.Second)
 }
