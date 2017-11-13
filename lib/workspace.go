@@ -9,6 +9,10 @@ import (
 
 	"io/ioutil"
 
+	"time"
+
+	"github.com/fatih/color"
+
 	"github.com/launchdarkly/gogitix/lib/utils"
 )
 
@@ -35,6 +39,24 @@ func Start(gitRoot string) (Workspace, error) {
 	if err := os.Setenv("GOPATH", strings.Join([]string{workDir, os.Getenv("GOPATH")}, ":")); err != nil {
 		return Workspace{}, err
 	}
+
+	yellow := color.New(color.FgYellow)
+	yellow.Printf("Identifying changed files.")
+	ticker := time.NewTicker(200 * time.Millisecond)
+	defer func() {
+		ticker.Stop()
+		yellow.Printf("\n")
+	}()
+
+	go func() {
+		for {
+			_, ok := <-ticker.C
+			if !ok {
+				break
+			}
+			yellow.Printf(".")
+		}
+	}()
 
 	rootPackage := strings.TrimSpace(MustRunCmd("go", "list", "-e", "."))
 	rootDir := path.Join(workDir, "src", rootPackage)
