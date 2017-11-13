@@ -68,9 +68,12 @@ func (executor CommandExecutor) ExecuteWithOutput(ws Workspace, cmd Command) ([]
 	start := time.Now()
 	shellCmd := exec.Command("/bin/bash", file.Name()) /* #nosec */
 
-	msg := "Running"
+	msg := "Run"
+	if executor.DryRun {
+		msg = "Would run"
+	}
 	if cmd.Description != "" {
-		msg += fmt.Sprintf(" '%s'", cmd.Description)
+		msg += fmt.Sprintf(" [%s]", cmd.Description)
 	}
 	msg += ":"
 	if strings.Contains(strings.TrimSpace(cmd.Command), "\n") {
@@ -112,7 +115,7 @@ func PrintCmdLine(status CmdStatus, name string, colorNum int, format string, ar
 	cmdColor := color.New(CmdColors[colorNum])
 	output := fmt.Sprintf(format, args...)
 	for _, line := range strings.Split(output, "\n") {
-		fmt.Print(cmdColor.Sprint("| " + name + " | " + line + "\n"))
+		fmt.Print(cmdColor.Sprint("> " + name + " | " + line + "\n"))
 	}
 }
 

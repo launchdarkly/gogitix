@@ -12,6 +12,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/fatih/color"
+
 	"github.com/launchdarkly/gogitix/lib"
 )
 
@@ -109,6 +111,8 @@ func main() {
 	if parseError != nil {
 		lib.Failf("Unable to parse config file: %s", parseError.Error())
 	}
+
+	color.Yellow("Running checks...")
 
 	errResult := make(chan error)
 	go lib.RunCheck(ws, lib.CommandExecutor{DryRun: dryRun}, parsedCheck, errResult)
