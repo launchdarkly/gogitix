@@ -42,7 +42,7 @@ func Start(gitRoot string) (Workspace, error) {
 
 	yellow := color.New(color.FgYellow)
 	yellow.Printf("Identifying changed files.")
-	ticker := time.NewTicker(200 * time.Millisecond)
+	ticker := time.NewTicker(500 * time.Millisecond)
 	defer func() {
 		ticker.Stop()
 		yellow.Printf("\n")
