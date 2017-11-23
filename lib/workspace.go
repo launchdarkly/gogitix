@@ -68,12 +68,12 @@ func Start(gitRoot string, pathSpec []string) (Workspace, error) {
 		locallyChangedFilesChan <- getLocallyChangedFiles(gitRoot, pathSpec)
 	}()
 
-	rootPackage := strings.TrimSpace(MustRunCmd("go", "list", "-e", "."))
-	rootDir := path.Join(workDir, "src", rootPackage)
-
 	go func() {
 		updatedDirsChan <- getUpdatedDirs(gitRoot, pathSpec)
 	}()
+
+	rootPackage := strings.TrimSpace(MustRunCmd("go", "list", "-e", "."))
+	rootDir := path.Join(workDir, "src", rootPackage)
 
 	MustRunCmd("git", "-C", gitRoot, "checkout-index", "-a", "--prefix", rootDir+"/")
 
