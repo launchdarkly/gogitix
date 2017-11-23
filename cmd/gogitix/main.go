@@ -43,9 +43,20 @@ var defaultFlow = `
       go test -run non-existent-test-name-!!! {{ ._packages_ }}
 {{ end }}`
 
+var DefaultPathSpec = []string{"*.go", ":(exclude)vendor/"}
+
+var pathSpec FlagSlice
+
 func main() {
 	flag.BoolVar(&debug, "d", false, "debug")
 	flag.BoolVar(&dryRun, "n", false, "dry run")
+	flag.Var(&pathSpec, "path-spec", fmt.Sprintf("git path spec (default: %v)", DefaultPathSpec))
+
+	if len(pathSpec) == 0 {
+		pathSpec := make([]string, len(DefaultPathSpec))
+		copy(pathSpec, DefaultPathSpec)
+	}
+
 	flag.Parse()
 
 	lib.SetDebug(debug)
@@ -55,7 +66,7 @@ func main() {
 		lib.Failf(err.Error())
 	}
 
-	ws, wsErr := lib.Start(gitRoot)
+	ws, wsErr := lib.Start(gitRoot, pathSpec)
 	if wsErr != nil {
 		lib.Failf(err.Error())
 	}
@@ -76,8 +87,10 @@ func main() {
 		"_files_":    strings.Join(ws.UpdatedFiles, " "),
 		"dirs":       ws.UpdatedDirs,
 		"_dirs_":     strings.Join(ws.UpdatedDirs, " "),
-		"topDirs":    ws.TopUpdatedDirs,
-		"_topDirs_":  strings.Join(ws.TopUpdatedDirs, " "),
+		"trees":      ws.UpdatedTrees,
+		"_trees_":    strings.Join(ws.UpdatedTrees, " "),
+		"topDirs":    ws.UpdatedTrees, // Old names for trees
+		"_topDirs_":  strings.Join(ws.UpdatedTrees, " "),
 		"packages":   ws.UpdatedPackages,
 		"_packages_": strings.Join(ws.UpdatedPackages, " "),
 		"gitRoot":    gitRoot,
@@ -124,4 +137,15 @@ func main() {
 			lib.Failf(err.Error())
 		}
 	}
+}
+
+type FlagSlice []string
+
+func (p *FlagSlice) String() string {
+	return strings.Join(pathSpec, " ")
+}
+
+func (p *FlagSlice) Set(s string) error {
+	*p = append(*p, s)
+	return nil
 }
