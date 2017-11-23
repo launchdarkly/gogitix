@@ -53,7 +53,7 @@ func main() {
 	flag.Var(&pathSpec, "path-spec", fmt.Sprintf("git path spec (default: %v)", DefaultPathSpec))
 
 	if len(pathSpec) == 0 {
-		pathSpec := make([]string, len(DefaultPathSpec))
+		pathSpec = make([]string, len(DefaultPathSpec))
 		copy(pathSpec, DefaultPathSpec)
 	}
 
