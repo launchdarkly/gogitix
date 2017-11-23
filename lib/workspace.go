@@ -56,21 +56,36 @@ func Start(gitRoot string, pathSpec []string) (Workspace, error) {
 		}
 	}()
 
+	updatedFilesChan := make(chan []string, 1)
+	locallyChangedFilesChan := make(chan []string, 1)
+	updatedDirsChan := make(chan []string, 1)
+
+	go func() {
+		updatedFilesChan <- getUpdatedFiles(gitRoot, pathSpec)
+	}()
+
+	go func() {
+		locallyChangedFilesChan <- getLocallyChangedFiles(gitRoot, pathSpec)
+	}()
+
 	rootPackage := strings.TrimSpace(MustRunCmd("go", "list", "-e", "."))
 	rootDir := path.Join(workDir, "src", rootPackage)
 
+	go func() {
+		updatedDirsChan <- getUpdatedDirs(gitRoot, pathSpec)
+	}()
+
 	MustRunCmd("git", "-C", gitRoot, "checkout-index", "-a", "--prefix", rootDir+"/")
-
-	updatedFiles := strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--cached", "--name-only", "--diff-filter=ACMR", "--"}, pathSpec...)...))
-	locallyChangedFiles := strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--name-only", "--diff-filter=ACMR", "--"}, pathSpec...)...))
-
-	updatedDirs := getUpdatedDirs(pathSpec)
-
-	updatedPackages := getUpdatedPackages(rootDir, rootPackage, updatedDirs)
 
 	if err := os.Chdir(rootDir); err != nil {
 		return Workspace{}, err
 	}
+
+	updatedDirs := <-updatedDirsChan
+	updatedPackages := getUpdatedPackages(rootPackage, updatedDirs)
+
+	updatedFiles := <-updatedFilesChan
+	locallyChangedFiles := <-locallyChangedFilesChan
 
 	return Workspace{
 		GitDir:              gitRoot,
@@ -83,15 +98,20 @@ func Start(gitRoot string, pathSpec []string) (Workspace, error) {
 		LocallyChangedFiles: utils.SortStrings(locallyChangedFiles),
 	}, nil
 }
+func getLocallyChangedFiles(gitRoot string, pathSpec []string) []string {
+	return strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--name-only", "--diff-filter=ACMR", "--"}, pathSpec...)...))
+}
+
+func getUpdatedFiles(gitRoot string, pathSpec []string) []string {
+	return strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--cached", "--name-only", "--diff-filter=ACMR", "--"}, pathSpec...)...))
+}
 
 func (ws Workspace) Close() error {
 	return os.RemoveAll(ws.WorkDir)
 }
 
-func getUpdatedPackages(rootDir, rootPackage string, updatedDirs []string) []string {
-	if err := os.Chdir(rootDir); err != nil {
-		panic(err)
-	}
+// Must be run in rootDir
+func getUpdatedPackages(rootPackage string, updatedDirs []string) []string {
 	packages := strings.Fields(MustRunCmd("go", "list", "./..."))
 	updatedPackages := map[string]bool{}
 
@@ -107,8 +127,8 @@ func getUpdatedPackages(rootDir, rootPackage string, updatedDirs []string) []str
 	return utils.StrKeys(updatedPackages)
 }
 
-func getUpdatedDirs(pathSpec []string) []string {
-	fileStatus := MustRunCmd("git", append([]string{"diff", "--cached", "--name-status", "--diff-filter=ACDMR", "--"}, pathSpec...)...)
+func getUpdatedDirs(gitRoot string, pathSpec []string) []string {
+	fileStatus := MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--cached", "--name-status", "--diff-filter=ACDMR", "--"}, pathSpec...)...)
 	scanner := bufio.NewScanner(strings.NewReader(fileStatus))
 	var allFiles []string
 	for scanner.Scan() {
