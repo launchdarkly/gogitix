@@ -4,6 +4,9 @@
 
 Gogitix is a tool for writing git pre-commit checks for golang.  It allows you to run a sequence of commands on the changes in your git index by checking out those files to a separate workarea.
 
+
+![gogitix in action](gogitix.gif?raw=true    "gogitix in action")
+
 ## Installation
 
 Install it with:
@@ -53,7 +56,7 @@ Several variables are provided by default:
 .files - an array of files that have been updated (and still exist). Sorted alphabetically.
 .packages - an array of packages that have been updated (and still exist).  e.g. "github.com/launchdarkly/gogitix"
 .dirs - an array of directories that have been updated (and still exist). Paths are relative. Sorted alphabetically.
-.topDirs - an array of directories that have been updated (and still exist) with nested directories excluded. Paths are relative. Sorted alphabetically.
+.trees - an array of subtrees that have been updated (and still exist). Paths are relative. Sorted alphabetically.
 .root - root directory for your git repository in the temporary workarea
 .gitRoot - root directory of your go source
 .workRoot -- root directory of the temporary workarea
@@ -65,7 +68,7 @@ For your convenience there are also versions of the arrays that are space separa
 _files_
 _packages_
 _dirs_
-_topDirs_
+_trees_
 ```
 
 The commands are:
