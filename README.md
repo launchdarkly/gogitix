@@ -28,26 +28,26 @@ The config file is passed through the golang text template processor.  By defaul
 
 ```
 - parallel:
-{{- if gt (len .packages) 0 }}
+{{ if gt (len .packages) 0 }}
     - run:
         name: build
         command: go build {{ ._packages_ }}
     - run:
         name: vet
         command: go vet {{ ._packages_ }}
-{{- end }}
-{{- if gt (len .files) 0 }}
+{{ end }}
+{{ if gt (len .files) 0 }}
     - run:
         name: fmt
         command: gofmt {{ ._files_ }}
-{{- end }}
-{{- if gt (len .packages) 0 }}
+{{ end }}
+{{ if gt (len .packages) 0 }}
 - run:
     name: test compile
     description: Compiling and initializing tests (but not running them)
     command: |
       go test -run non-existent-test-name-!!! {{ ._packages_ }}
-{{- end }}`
+{{ end }}`
 ```
 
 Several variables are provided by default:
