@@ -2,13 +2,12 @@ package lib
 
 import (
 	"bufio"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-
-	"io/ioutil"
-
 	"time"
 
 	"github.com/fatih/color"
@@ -27,7 +26,7 @@ type Workspace struct {
 	LocallyChangedFiles []string // Files where the git index differs from what's in the working tree
 }
 
-func Start(gitRoot string, pathSpec []string) (Workspace, error) {
+func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) {
 	workDir, err := ioutil.TempDir("", os.Args[0])
 	if err != nil {
 		return Workspace{}, err
@@ -75,7 +74,36 @@ func Start(gitRoot string, pathSpec []string) (Workspace, error) {
 	rootPackage := strings.TrimSpace(MustRunCmd("go", "list", "-e", "."))
 	rootDir := path.Join(workDir, "src", rootPackage)
 
-	MustRunCmd("git", "-C", gitRoot, "checkout-index", "-a", "--prefix", rootDir+"/")
+	// Try to create a shadow copy instead of checking out all the files
+	lndir := ""
+	lndirArgs := []string{}
+	if useLndir {
+		if _, err := RunCmd("which", "go-lndir"); err == nil {
+			lndir = "go-lndir"
+			lndirArgs = []string{"--gitignore"}
+		} else if _, err := RunCmd("which", "lndir"); err != nil {
+			lndir = "lndir"
+		}
+	}
+
+	if lndir != "" {
+		absGitRoot, err := filepath.Abs(gitRoot)
+		if err != nil {
+			return Workspace{}, err
+		}
+		if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
+			return Workspace{}, err
+		}
+		// Start with a copy of the current workspace
+		MustRunCmd(lndir, append(lndirArgs, absGitRoot, rootDir)...)
+		// Copy out any files that have local changes from the index
+		cmd := fmt.Sprintf("git diff --name-only | git checkout-index --stdin -f --prefix %s/", rootDir)
+		MustRunCmd("sh", "-c", cmd)
+		// Finally, copy out the files we want to test
+		MustRunCmd("git", "-C", gitRoot, "checkout-index", "-f", "--prefix", rootDir+"/")
+	} else {
+		MustRunCmd("git", "-C", gitRoot, "checkout-index", "-a", "--prefix", rootDir+"/")
+	}
 
 	if err := os.Chdir(rootDir); err != nil {
 		return Workspace{}, err

@@ -50,6 +50,7 @@ var pathSpec FlagSlice
 func main() {
 	flag.BoolVar(&debug, "d", false, "debug")
 	flag.BoolVar(&dryRun, "n", false, "dry run")
+	useLndir := *flag.Bool("lndir", true, "Use go-lndir or lndir if available")
 	flag.Var(&pathSpec, "path-spec", fmt.Sprintf("git path spec (default: %v)", DefaultPathSpec))
 
 	if len(pathSpec) == 0 {
@@ -66,7 +67,7 @@ func main() {
 		lib.Failf(err.Error())
 	}
 
-	ws, wsErr := lib.Start(gitRoot, pathSpec)
+	ws, wsErr := lib.Start(gitRoot, pathSpec, useLndir)
 	if wsErr != nil {
 		lib.Failf(err.Error())
 	}
