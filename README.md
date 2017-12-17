@@ -1,6 +1,7 @@
 # Gogitix (Go Git Index Checks)
 
 [![CircleCI](https://circleci.com/gh/launchdarkly/gogitix.svg?style=svg)](https://circleci.com/gh/launchdarkly/gogitix)
+[![Build Status](https://travis-ci.org/launchdarkly/gogitix.svg?branch=master)](https://travis-ci.org/launchdarkly/gogitix)
 
 Gogitix is a tool for writing git pre-commit checks for golang.  It allows you to run a sequence of commands on the changes in your git index by checking out those files to a separate workarea.
 If `-lndir` is specified, gogitix will use `go-lndir` or `lndir` to create a create a git workspace populated only by links.
