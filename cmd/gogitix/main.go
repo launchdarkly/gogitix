@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"text/template"
 
@@ -62,20 +61,18 @@ func main() {
 
 	lib.SetDebug(debug)
 
-	gitRoot, err := os.Getwd()
-	if err != nil {
-		lib.Failf(err.Error())
-	}
+	gitRoot := strings.TrimSpace(lib.MustRunCmd("git", "rev-parse", "--show-toplevel"))
 
 	ws, wsErr := lib.Start(gitRoot, pathSpec, useLndir)
 	if wsErr != nil {
-		lib.Failf(err.Error())
+		lib.Failf(wsErr.Error())
 	}
 
 	defer ws.Close()
 
 	configFileRaw := []byte(defaultFlow)
 	if len(flag.Args()) > 0 {
+		var err error
 		configFilePath := flag.Arg(0)
 		configFileRaw, err = ioutil.ReadFile(configFilePath)
 		if err != nil {

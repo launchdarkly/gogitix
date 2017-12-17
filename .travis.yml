@@ -1,0 +1,15 @@
+language: go
+go:
+  - 1.8
+  - 1.9
+  - master
+
+before_script:
+  - go get -u github.com/kardianos/govendor/...
+
+script:
+  - make test
+  - govendor install +local
+  # Some basic tests of the tool
+  - gogitix
+  - gogitix gogitix.yml

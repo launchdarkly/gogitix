@@ -27,10 +27,11 @@ type Workspace struct {
 }
 
 func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) {
-	workDir, err := ioutil.TempDir("", os.Args[0])
+	workDir, err := ioutil.TempDir("", path.Base(os.Args[0]))
 	if err != nil {
 		return Workspace{}, err
 	}
+
 	workDir, _ = filepath.EvalSymlinks(workDir)
 
 	if err := os.Setenv("GOPATH", strings.Join([]string{workDir, os.Getenv("GOPATH")}, ":")); err != nil {
@@ -71,7 +72,7 @@ func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) 
 		updatedDirsChan <- getUpdatedDirs(gitRoot, pathSpec)
 	}()
 
-	rootPackage := strings.TrimSpace(MustRunCmd("go", "list", "-e", "."))
+	rootPackage := strings.TrimSpace(MustRunCmd("sh", "-c", fmt.Sprintf("cd %s && go list -e .", gitRoot)))
 	rootDir := path.Join(workDir, "src", rootPackage)
 
 	// Try to create a shadow copy instead of checking out all the files
