@@ -3,8 +3,11 @@
 [![CircleCI](https://circleci.com/gh/launchdarkly/gogitix.svg?style=svg)](https://circleci.com/gh/launchdarkly/gogitix)
 [![Build Status](https://travis-ci.org/launchdarkly/gogitix.svg?branch=master)](https://travis-ci.org/launchdarkly/gogitix)
 
+**Stable release:** [gopkg.in/launchdarkly/gogitix.v1](http://gopkg.in/launchdarkly/gogitix.v1)
+
 Gogitix is a tool for writing git pre-commit checks for golang.  It allows you to run a sequence of commands on the changes in your git index by checking out those files to a separate workarea.
-If `-lndir` is specified, gogitix will use `go-lndir` or `lndir` to create a create a git workspace populated only by links.
+
+If `-lndir` is specified, gogitix will use [`go-lndir`](https://github.com/launchdarkly/go-lndir) or `lndir` to create a create a git workspace populated only by links.
 
 ![gogitix in action](gogitix.gif?raw=true    "gogitix in action")
 
@@ -13,7 +16,7 @@ If `-lndir` is specified, gogitix will use `go-lndir` or `lndir` to create a cre
 Install it with:
 
 ```
-go get -u github.com/launchdarkly/gogitix/...
+go get -u http://gopkg.in/launchdarkly/gogitix.v1
 ```
 
 Run it on your git index with:
@@ -48,7 +51,7 @@ The config file is passed through the golang text template processor.  By defaul
     description: Compiling and initializing tests (but not running them)
     command: |
       go test -run non-existent-test-name-!!! {{ ._packages_ }}
-{{ end }}`
+{{ end }}
 ```
 
 Several variables are provided by default:
