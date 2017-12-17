@@ -81,7 +81,7 @@ func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) 
 		if _, err := RunCmd("which", "go-lndir"); err == nil {
 			lndir = "go-lndir"
 			lndirArgs = append(lndirArgs, "-gitignore")
-		} else if _, err := RunCmd("which", "lndir"); err != nil {
+		} else if _, err := RunCmd("which", "lndir"); err == nil {
 			lndir = "lndir"
 		}
 	}
