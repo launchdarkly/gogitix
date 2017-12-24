@@ -12,7 +12,7 @@ before_install:
   # Make the binary executable
   - chmod +x $GOPATH/bin/dep
 
-install:
+before_script:
   - go get -u github.com/launchdarkly/go-lndir/...
 
 script:
