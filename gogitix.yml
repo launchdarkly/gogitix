@@ -11,12 +11,6 @@
         name: go vet
         command: go tool vet -composites=false {{ ._dirs_ }}
     {{ end }}
-    - run:
-        - description: Verify that govendor is consistent
-          command: govendor sync -n
-          expect_silence: true
-        - description: Verify that govendor status is ok
-          command: govendor status
     {{ if gt (len .packages) 0 }}
     - run:
         name: gotest compile
