@@ -1,6 +1,5 @@
 # Gogitix (Go Git Index Checks)
 
-[![CircleCI](https://circleci.com/gh/launchdarkly/gogitix.svg?style=svg)](https://circleci.com/gh/launchdarkly/gogitix)
 [![Build Status](https://travis-ci.org/launchdarkly/gogitix.svg?branch=master)](https://travis-ci.org/launchdarkly/gogitix)
 
 **Stable release:** [gopkg.in/launchdarkly/gogitix.v1](http://gopkg.in/launchdarkly/gogitix.v1)
