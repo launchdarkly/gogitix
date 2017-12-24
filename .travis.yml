@@ -12,7 +12,11 @@ before_install:
   # Make the binary executable
   - chmod +x $GOPATH/bin/dep
 
+install:
+  - go get -u github.com/launchdarkly/go-lndir/...
+
 script:
+  - dep status
   - make test
   - go install ./cmd/gogitix
   # Some basic tests of the tool
