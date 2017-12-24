@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Note that this builds in the git root rather than the index
-go install ./... || exit 1
+go install ./cmd/gogitix || exit 1
 
 # Get stdin from tty
 exec < /dev/tty

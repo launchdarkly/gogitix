@@ -3,16 +3,18 @@ go:
   - 1.8
   - 1.9
   - master
+env:
+  - DEP_VERSION="0.3.2"
 
-install:
-  - go get -u github.com/launchdarkly/go-lndir/...
-
-before_script:
-  - go get -u github.com/kardianos/govendor/...
+before_install:
+  # Download the binary to bin folder in $GOPATH
+  - curl -L -s https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o $GOPATH/bin/dep
+  # Make the binary executable
+  - chmod +x $GOPATH/bin/dep
 
 script:
   - make test
-  - govendor install +local
+  - go install ./cmd/gogitix
   # Some basic tests of the tool
   - gogitix
   - gogitix gogitix.yml

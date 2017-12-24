@@ -2,12 +2,7 @@
     check: goimports -l -local github.com/launchdarkly/gogitix {{ ._files_ }}
     format: goimports -w -local github.com/launchdarkly/gogitix {{ ._files_ }}
 - parallel:
-    - run:
-        name: govendor list +outside
-        command: |
-          (govendor list +outside | grep -v "^ ex") || true
-        description: Checking for external dependencies
-        expect_silence: true
+    - run: dep status
     {{ if gt (len .packages) 0 }}
     - run: staticcheck {{ ._packages_ }}
     {{ end }}

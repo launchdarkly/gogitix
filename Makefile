@@ -1,8 +1,6 @@
 test:
-	govendor test +local
-	govendor build +local +program
+	go test ./lib
 	go build ./cmd/gogitix
-	govendor test +local
 	cd test && bats test.bats
 
 init:

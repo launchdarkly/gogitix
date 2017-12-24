@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-GOGITIX=$PWD/../gogitix
+GOGITIX="$BATS_TEST_DIRNAME/../gogitix"
 
 @test "gogitix with default options" {
   cd sample-project
