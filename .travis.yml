@@ -13,7 +13,7 @@ before_install:
   - chmod +x $GOPATH/bin/dep
 
 install:
-  - go get -u github.com/launchdarkly/go-lndir/cmd
+  - go get -u github.com/launchdarkly/go-lndir/cmd/go-lndir
 
 script:
   - dep status
