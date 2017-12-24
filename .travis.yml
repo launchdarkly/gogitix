@@ -12,8 +12,8 @@ before_install:
   # Make the binary executable
   - chmod +x $GOPATH/bin/dep
 
-before_script:
-  - go get -u github.com/launchdarkly/go-lndir/...
+install:
+  - go get -u github.com/launchdarkly/go-lndir/cmd
 
 script:
   - dep status
