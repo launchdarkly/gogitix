@@ -4,6 +4,9 @@ go:
   - 1.9
   - master
 
+install:
+  - go get -u github.com/launchdarkly/go-lndir/...
+
 before_script:
   - go get -u github.com/kardianos/govendor/...
 
