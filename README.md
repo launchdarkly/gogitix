@@ -15,7 +15,7 @@ If `-lndir` is specified, gogitix will use [`go-lndir`](https://github.com/launc
 Install it with:
 
 ```
-go get -u http://gopkg.in/launchdarkly/gogitix.v1
+go get -u http://github.com/launchdarkly/gogitix/cmd/...
 ```
 
 Run it on your git index with:
