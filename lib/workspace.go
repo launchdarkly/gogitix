@@ -150,6 +150,9 @@ func getUpdatedPackages(rootPackage string, updatedDirs []string) []string {
 
 	for _, p := range packages {
 		dirName := strings.TrimPrefix(p, rootPackage+"/")
+		if dirName == rootPackage {
+			dirName = "."
+		}
 		if updatedDirMap[dirName] {
 			updatedPackages[p] = true
 		}
