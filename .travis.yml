@@ -21,4 +21,5 @@ script:
   - go install ./cmd/gogitix
   # Some basic tests of the tool
   - gogitix
-  - gogitix gogitix.yml
+  - gogitix -c gogitix.yml
+  - gogitix HEAD^..HEAD

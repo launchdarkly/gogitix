@@ -13,6 +13,7 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/launchdarkly/gogitix/lib/utils"
+	"log"
 )
 
 type Workspace struct {
@@ -26,7 +27,7 @@ type Workspace struct {
 	LocallyChangedFiles []string // Files where the git index differs from what's in the working tree
 }
 
-func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) {
+func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string) (Workspace, error) {
 	workDir, err := ioutil.TempDir("", path.Base(os.Args[0]))
 	if err != nil {
 		return Workspace{}, err
@@ -61,7 +62,7 @@ func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) 
 	updatedDirsChan := make(chan []string, 1)
 
 	go func() {
-		updatedFilesChan <- getUpdatedFiles(gitRoot, pathSpec)
+		updatedFilesChan <- getUpdatedFiles(gitRoot, pathSpec, gitRevSpec)
 	}()
 
 	go func() {
@@ -69,7 +70,7 @@ func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) 
 	}()
 
 	go func() {
-		updatedDirsChan <- getUpdatedDirs(gitRoot, pathSpec)
+		updatedDirsChan <- getUpdatedDirs(gitRoot, pathSpec, gitRevSpec)
 	}()
 
 	rootPackage := strings.TrimSpace(MustRunCmd("sh", "-c", fmt.Sprintf("cd %s && go list -e .", gitRoot)))
@@ -89,23 +90,36 @@ func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) 
 		}
 	}
 
-	if lndir != "" {
-		absGitRoot, err := filepath.Abs(gitRoot)
-		if err != nil {
-			return Workspace{}, err
+	// Check out the index unless we've been given a revSpec to test
+	if gitRevSpec == "" {
+		if lndir != "" {
+			absGitRoot, err := filepath.Abs(gitRoot)
+			if err != nil {
+				return Workspace{}, err
+			}
+			if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
+				return Workspace{}, err
+			}
+			// Start with a copy of the current workspace
+			MustRunCmd(lndir, append(lndirArgs, absGitRoot, rootDir)...)
+			// Copy out any files that have local changes from the index
+			cmd := fmt.Sprintf("git diff --name-only | git checkout-index --stdin -f --prefix %s/", rootDir)
+			MustRunCmd("sh", "-c", cmd)
+			// Finally, copy out the files we want to test
+			MustRunCmd("git", "-C", gitRoot, "checkout-index", "-f", "--prefix", rootDir+"/")
+		} else {
+			MustRunCmd("git", "-C", gitRoot, "checkout-index", "-a", "--prefix", rootDir+"/")
 		}
+	} else {
+		shas := MustRunCmd("git", "-C", gitRoot, "rev-list", gitRevSpec)
+		if len(shas) == 0 {
+			log.Fatalf(`Could not find any SHAS in range "%s"`, gitRevSpec)
+		}
+		mostRecentSha := strings.Fields(shas)[0]
 		if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
 			return Workspace{}, err
 		}
-		// Start with a copy of the current workspace
-		MustRunCmd(lndir, append(lndirArgs, absGitRoot, rootDir)...)
-		// Copy out any files that have local changes from the index
-		cmd := fmt.Sprintf("git diff --name-only | git checkout-index --stdin -f --prefix %s/", rootDir)
-		MustRunCmd("sh", "-c", cmd)
-		// Finally, copy out the files we want to test
-		MustRunCmd("git", "-C", gitRoot, "checkout-index", "-f", "--prefix", rootDir+"/")
-	} else {
-		MustRunCmd("git", "-C", gitRoot, "checkout-index", "-a", "--prefix", rootDir+"/")
+		MustRunCmd("git", "-C", gitRoot, "--work-tree", rootDir, "checkout", mostRecentSha, "--", ".")
 	}
 
 	if err := os.Chdir(rootDir); err != nil {
@@ -129,12 +143,22 @@ func Start(gitRoot string, pathSpec []string, useLndir bool) (Workspace, error) 
 		LocallyChangedFiles: utils.SortStrings(locallyChangedFiles),
 	}, nil
 }
+
 func getLocallyChangedFiles(gitRoot string, pathSpec []string) []string {
 	return strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--name-only", "--diff-filter=ACMR", "--"}, pathSpec...)...))
 }
 
-func getUpdatedFiles(gitRoot string, pathSpec []string) []string {
-	return strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--cached", "--name-only", "--diff-filter=ACMR", "--"}, pathSpec...)...))
+func getUpdatedFiles(gitRoot string, pathSpec []string, gitRevSpec string) []string {
+	diffCmd := []string{"diff", "--name-only", "--diff-filter=ACMR"}
+	if gitRevSpec != "" {
+		diffCmd = append(diffCmd, gitRevSpec)
+
+	} else {
+		diffCmd = append(diffCmd, "--cached")
+	}
+	diffCmd = append(diffCmd, "--")
+	diffCmd = append(diffCmd, pathSpec...)
+	return strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot}, diffCmd...)...))
 }
 
 func (ws Workspace) Close() error {
@@ -161,8 +185,16 @@ func getUpdatedPackages(rootPackage string, updatedDirs []string) []string {
 	return utils.StrKeys(updatedPackages)
 }
 
-func getUpdatedDirs(gitRoot string, pathSpec []string) []string {
-	fileStatus := MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--cached", "--name-status", "--diff-filter=ACDMR", "--"}, pathSpec...)...)
+func getUpdatedDirs(gitRoot string, pathSpec []string, gitRevSpec string) []string {
+	diffCmd := []string{"diff", "--name-status", "--diff-filter=ACDMR"}
+	if gitRevSpec != "" {
+		diffCmd = append(diffCmd, gitRevSpec)
+	} else {
+		diffCmd = append(diffCmd, "--cached")
+	}
+	diffCmd = append(diffCmd, "--")
+	diffCmd = append(diffCmd, pathSpec...)
+	fileStatus := MustRunCmd("git", append([]string{"-C", gitRoot}, diffCmd...)...)
 	scanner := bufio.NewScanner(strings.NewReader(fileStatus))
 	var allFiles []string
 	for scanner.Scan() {
