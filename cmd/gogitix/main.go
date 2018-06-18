@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"text/template"
 
@@ -13,7 +12,8 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/launchdarkly/gogitix/lib"
+	"gopkg.in/launchdarkly/gogitix.v2/lib"
+	"regexp"
 )
 
 var debug = false
@@ -46,9 +46,14 @@ var DefaultPathSpec = []string{"*.go", ":(exclude)vendor/"}
 
 var pathSpec FlagSlice
 
+
+var revisionRangeRegexp = regexp.MustCompile(`\^[@!-]`)
+
 func main() {
+	var configFilePath string
 	flag.BoolVar(&debug, "d", false, "debug")
 	flag.BoolVar(&dryRun, "n", false, "dry run")
+	flag.StringVar(&configFilePath, "c", "", "config file path")
 	useLndir := flag.Bool("lndir", false, "Use go-lndir or lndir if available")
 	flag.Var(&pathSpec, "path-spec", fmt.Sprintf("git path spec (default: %v)", DefaultPathSpec))
 
@@ -59,11 +64,21 @@ func main() {
 
 	flag.Parse()
 
+	var gitRevSpec string
+	if len(flag.Args()) > 0 {
+		gitRevSpec = flag.Arg(0)
+
+		// Convert a single sha into a range with just that sha
+		if gitRevSpec != "" && !strings.Contains(gitRevSpec, "..") && !revisionRangeRegexp.MatchString(gitRevSpec) {
+			gitRevSpec = gitRevSpec + "^!"
+		}
+	}
+
 	lib.SetDebug(debug)
 
 	gitRoot := strings.TrimSpace(lib.MustRunCmd("git", "rev-parse", "--show-toplevel"))
 
-	ws, wsErr := lib.Start(gitRoot, pathSpec, *useLndir)
+	ws, wsErr := lib.Start(gitRoot, pathSpec, *useLndir, gitRevSpec)
 	if wsErr != nil {
 		lib.Failf(wsErr.Error())
 	}
@@ -71,10 +86,8 @@ func main() {
 	defer ws.Close()
 
 	configFileRaw := []byte(defaultFlow)
-	if len(flag.Args()) > 0 {
+	if configFilePath != "" {
 		var err error
-		configFilePath := flag.Arg(0)
-		configFileRaw, err = ioutil.ReadFile(configFilePath)
 		if err != nil {
 			lib.Failf(`Unable to read config file "%s": %s`, flag.Arg(0), err.Error())
 		}
@@ -125,8 +138,11 @@ func main() {
 
 	color.Yellow("Running checks...")
 
+	// Don't do reformat unless we're just checking the index
+	skipReformat := gitRevSpec != ""
+
 	errResult := make(chan error)
-	go lib.RunCheck(ws, lib.CommandExecutor{DryRun: dryRun}, parsedCheck, errResult)
+	go lib.RunCheck(ws, lib.CommandExecutor{DryRun: dryRun}, parsedCheck, skipReformat, errResult)
 
 	for {
 		if err, ok := <-errResult; !ok {

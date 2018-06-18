@@ -6,10 +6,10 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/launchdarkly/gogitix/lib/utils"
+	"gopkg.in/launchdarkly/gogitix.v2/lib/utils"
 )
 
-func Reformat(ws Workspace, executor Executor, check ReformatCheck) error {
+func Reformat(ws Workspace, executor Executor, check ReformatCheck, skipReformat bool) error {
 	if len(ws.UpdatedFiles) > 0 {
 		checkCommand := check.Check.Command
 		if checkCommand.Description != "" {
@@ -32,7 +32,7 @@ func Reformat(ws Workspace, executor Executor, check ReformatCheck) error {
 				}
 			}
 
-			if len(filesToUpdate) > 0 {
+			if len(filesToUpdate) > 0 && !skipReformat {
 				color.White("The following files need formatting:\n" + needsFormatting)
 				color.White("Automatically reformatting files.  Press <Enter> to review changes. Hit Ctrl-C at any point to abort commit.")
 

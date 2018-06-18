@@ -2,9 +2,12 @@ language: go
 go:
   - 1.8
   - 1.9
+  - "1.10"
   - master
 env:
   - DEP_VERSION="0.3.2"
+
+go_import_path: gopkg.in/launchdarkly/gogitix.v2
 
 before_install:
   # Download the binary to bin folder in $GOPATH
@@ -21,4 +24,7 @@ script:
   - go install ./cmd/gogitix
   # Some basic tests of the tool
   - gogitix
-  - gogitix gogitix.yml
+  - gogitix -c gogitix.yml
+  - gogitix HEAD^..HEAD
+  - gogitix HEAD
+  - gogitix HEAD^!

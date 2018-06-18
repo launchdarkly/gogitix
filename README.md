@@ -15,13 +15,25 @@ If `-lndir` is specified, gogitix will use [`go-lndir`](https://github.com/launc
 Install it with:
 
 ```
-go get -u github.com/launchdarkly/gogitix/cmd/...
+go get -u gopkg.in/launchdarkly/gogitix.v2/cmd/...
 ```
 
 Run it on your git index with:
 
 ```
-gogitix [<config file name>.yml]
+gogitix [-c <config file name>.yml]
+```
+
+Run it on your git on a SHA range with:
+
+```
+gogitix <sha1>..<sha2>
+```
+
+Run it on your git on single SHA with:
+
+```
+gogitix <sha>
 ```
 
 ## Configuration
@@ -57,7 +69,7 @@ Several variables are provided by default:
 
 ```
 .files - an array of files that have been updated (and still exist). Sorted alphabetically.
-.packages - an array of packages that have been updated (and still exist).  e.g. "github.com/launchdarkly/gogitix"
+.packages - an array of packages that have been updated (and still exist).  e.g. "gopkg.in/launchdarkly/gogitix.v2"
 .dirs - an array of directories that have been updated (and still exist). Paths are relative. Sorted alphabetically.
 .trees - an array of subtrees that have been updated (and still exist). Paths are relative. Sorted alphabetically.
 .root - root directory for your git repository in the temporary workarea
@@ -103,5 +115,5 @@ changed_files=$(git diff --cached --name-only --diff-filter=ACDMR -- '*.go')
 # Include this if you want to use "reformat" 
 # exec < /dev/tty
 
-exec gogitix gogitix.yml
+exec gogitix -c kgogitix.yml
 ``` 
