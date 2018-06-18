@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/launchdarkly/gogitix.svg?branch=master)](https://travis-ci.org/launchdarkly/gogitix)
 
-**Stable release:** [gopkg.in/launchdarkly/gogitix.v1](http://gopkg.in/launchdarkly/gogitix.v1)
+**Stable release:** [gopkg.in/launchdarkly/gogitix.v2](http://gopkg.in/launchdarkly/gogitix.v2)
 
 Gogitix is a tool for writing git pre-commit checks for golang.  It allows you to run a sequence of commands on the changes in your git index by checking out those files to a separate workarea.
 
