@@ -26,3 +26,5 @@ script:
   - gogitix
   - gogitix -c gogitix.yml
   - gogitix HEAD^..HEAD
+  - gogitix HEAD
+  - gogitix HEAD^!
