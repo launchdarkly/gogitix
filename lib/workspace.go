@@ -12,7 +12,7 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/launchdarkly/gogitix/lib/utils"
+	"gopkg.in/launchdarkly/gogitix.v2/lib/utils"
 	"log"
 )
 

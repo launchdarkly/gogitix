@@ -6,7 +6,7 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/launchdarkly/gogitix/lib/utils"
+	"gopkg.in/launchdarkly/gogitix.v2/lib/utils"
 )
 
 func Reformat(ws Workspace, executor Executor, check ReformatCheck, skipReformat bool) error {

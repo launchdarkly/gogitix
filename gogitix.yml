@@ -1,6 +1,6 @@
 - reformat:
-    check: goimports -l -local github.com/launchdarkly/gogitix {{ ._files_ }}
-    format: goimports -w -local github.com/launchdarkly/gogitix {{ ._files_ }}
+    check: goimports -l -local gopkg.in/launchdarkly/gogitix.v2 {{ ._files_ }}
+    format: goimports -w -local gopkg.in/launchdarkly/gogitix.v2 {{ ._files_ }}
 - parallel:
     - run: dep status
     {{ if gt (len .packages) 0 }}

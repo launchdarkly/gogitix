@@ -69,7 +69,7 @@ Several variables are provided by default:
 
 ```
 .files - an array of files that have been updated (and still exist). Sorted alphabetically.
-.packages - an array of packages that have been updated (and still exist).  e.g. "github.com/launchdarkly/gogitix"
+.packages - an array of packages that have been updated (and still exist).  e.g. "gopkg.in/launchdarkly/gogitix.v2"
 .dirs - an array of directories that have been updated (and still exist). Paths are relative. Sorted alphabetically.
 .trees - an array of subtrees that have been updated (and still exist). Paths are relative. Sorted alphabetically.
 .root - root directory for your git repository in the temporary workarea
