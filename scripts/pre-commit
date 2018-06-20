@@ -10,5 +10,5 @@ exec < /dev/tty
 gogitix
 
 # Run custom checks
-exec gogitix -c gogitix.yml
+exec gogitix
 

@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-func RunCheck(ws Workspace, executor Executor, check Check, skipReformat bool, err chan<- error) {
+func RunCheck(ws Workspace, executor Executor, check Check, staging bool, skipReformat bool, err chan<- error) {
 	defer close(err)
 
 	switch check := check.(type) {
@@ -12,7 +12,7 @@ func RunCheck(ws Workspace, executor Executor, check Check, skipReformat bool, e
 		err <- executor.Execute(ws, check.Command)
 	case ReformatCheck:
 		if !skipReformat {
-			err <- Reformat(ws, executor, check, skipReformat)
+			err <- Reformat(ws, executor, check, staging, skipReformat)
 		}
 	case ManyChecks:
 		wg := sync.WaitGroup{}
@@ -45,7 +45,7 @@ func RunCheck(ws Workspace, executor Executor, check Check, skipReformat bool, e
 					}
 				}
 			}()
-			go RunCheck(ws, executor, childCheck, skipReformat, childErrs[i])
+			go RunCheck(ws, executor, childCheck, staging, skipReformat, childErrs[i])
 			if !check.Parallel {
 				wg.Wait()
 			}

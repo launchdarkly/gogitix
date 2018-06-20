@@ -45,7 +45,9 @@ gogitix <sha>
 ## Configuration
 
 The config file must be a YAML file with a syntax similar that used by CircleCI.
-The config file is passed through the golang text template processor.  By default, it will run a file that looks like:
+The config file is passed through the golang text template processor.  If you don't specify a config file and there is 
+a `.gogitix.yml` file in your git root directory, tha file will be used.  If no config file is provided, it will run a 
+file that looks like:
 
 ```
 - parallel:

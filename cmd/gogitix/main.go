@@ -12,6 +12,10 @@ import (
 	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
 
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"gopkg.in/launchdarkly/gogitix.v2/lib"
 )
 
@@ -85,11 +89,21 @@ func main() {
 
 	defer ws.Close()
 
+	if configFilePath == "" {
+		defaultConfigFilePath := filepath.Join(gitRoot, ".gogitix.yml")
+		color.Yellow("Using .gogitix.yml from git root")
+		if _, err := os.Stat(defaultConfigFilePath); err != nil {
+			lib.Failf(`Unable to read default config file "%s": %s`, defaultConfigFilePath, err)
+		}
+		configFilePath = defaultConfigFilePath
+	}
+
 	configFileRaw := []byte(defaultFlow)
 	if configFilePath != "" {
 		var err error
+		configFileRaw, err = ioutil.ReadFile(configFilePath)
 		if err != nil {
-			lib.Failf(`Unable to read config file "%s": %s`, flag.Arg(0), err.Error())
+			lib.Failf(`Unable to read config file "%s": %s`, flag.Arg(0), err)
 		}
 	}
 
@@ -142,7 +156,8 @@ func main() {
 	skipReformat := gitRevSpec != ""
 
 	errResult := make(chan error)
-	go lib.RunCheck(ws, lib.CommandExecutor{DryRun: dryRun}, parsedCheck, skipReformat, errResult)
+
+	go lib.RunCheck(ws, lib.CommandExecutor{DryRun: dryRun}, parsedCheck, staging, skipReformat, errResult)
 
 	for {
 		if err, ok := <-errResult; !ok {
