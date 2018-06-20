@@ -36,7 +36,8 @@ func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string, 
 
 	// If we need to make a copy for staging of a revspec
 	if gitRevSpec != "" || staging {
-		workDir, err := ioutil.TempDir("", path.Base(os.Args[0]))
+		var err error
+		workDir, err = ioutil.TempDir("", path.Base(os.Args[0]))
 		if err != nil {
 			return Workspace{}, err
 		}
