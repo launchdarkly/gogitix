@@ -24,13 +24,13 @@ script:
   - go install ./cmd/gogitix
   # Some basic tests of the tool
   - gogitix
-  - if [ -e .git/index.lock ]; then sleep 1; fi
+  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
   - gogitix -s
-  - if [ -e .git/index.lock ]; then sleep 1; fi
+  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
   - gogitix -c gogitix.yml
-  - if [ -e .git/index.lock ]; then sleep 1; fi
+  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
   - gogitix HEAD^..HEAD
-  - if [ -e .git/index.lock ]; then sleep 1; fi
+  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
   - gogitix HEAD
-  - if [ -e .git/index.lock ]; then sleep 1; fi
+  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
   - gogitix HEAD^!
