@@ -18,10 +18,16 @@ Install it with:
 go get -u gopkg.in/launchdarkly/gogitix.v2/cmd/...
 ```
 
-Run it on your git index with:
+Run it on your current changes with:
 
 ```
 gogitix [-c <config file name>.yml]
+```
+
+Run it on your git index with:
+
+```
+gogitix -s [-c <config file name>.yml]
 ```
 
 Run it on your git on a SHA range with:

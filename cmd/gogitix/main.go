@@ -5,19 +5,19 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"regexp"
 	"strings"
 	"text/template"
 
+	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
 
-	"github.com/fatih/color"
-
 	"gopkg.in/launchdarkly/gogitix.v2/lib"
-	"regexp"
 )
 
 var debug = false
 var dryRun = false
+var staging = false
 
 var defaultFlow = `
 - parallel:
@@ -46,13 +46,13 @@ var DefaultPathSpec = []string{"*.go", ":(exclude)vendor/"}
 
 var pathSpec FlagSlice
 
-
 var revisionRangeRegexp = regexp.MustCompile(`\^[@!-]`)
 
 func main() {
 	var configFilePath string
 	flag.BoolVar(&debug, "d", false, "debug")
 	flag.BoolVar(&dryRun, "n", false, "dry run")
+	flag.BoolVar(&staging, "s", false, "run changes on staging area")
 	flag.StringVar(&configFilePath, "c", "", "config file path")
 	useLndir := flag.Bool("lndir", false, "Use go-lndir or lndir if available")
 	flag.Var(&pathSpec, "path-spec", fmt.Sprintf("git path spec (default: %v)", DefaultPathSpec))
@@ -78,7 +78,7 @@ func main() {
 
 	gitRoot := strings.TrimSpace(lib.MustRunCmd("git", "rev-parse", "--show-toplevel"))
 
-	ws, wsErr := lib.Start(gitRoot, pathSpec, *useLndir, gitRevSpec)
+	ws, wsErr := lib.Start(gitRoot, pathSpec, *useLndir, gitRevSpec, staging)
 	if wsErr != nil {
 		lib.Failf(wsErr.Error())
 	}

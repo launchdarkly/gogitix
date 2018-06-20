@@ -12,8 +12,9 @@ import (
 
 	"github.com/fatih/color"
 
-	"gopkg.in/launchdarkly/gogitix.v2/lib/utils"
 	"log"
+
+	"gopkg.in/launchdarkly/gogitix.v2/lib/utils"
 )
 
 type Workspace struct {
@@ -25,18 +26,28 @@ type Workspace struct {
 	UpdatedFiles        []string // Files that have changed and still exist
 	UpdatedPackages     []string // Packages that have changed and still exist
 	LocallyChangedFiles []string // Files where the git index differs from what's in the working tree
+	deleteOnClose       bool     // whether to delete the workspace when we are done
 }
 
-func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string) (Workspace, error) {
-	workDir, err := ioutil.TempDir("", path.Base(os.Args[0]))
-	if err != nil {
-		return Workspace{}, err
-	}
+func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string, staging bool) (Workspace, error) {
+	workDir := gitRoot
+	rootDir := gitRoot
+	rootPackage := strings.TrimSpace(MustRunCmd("sh", "-c", fmt.Sprintf("cd %s && go list -e .", gitRoot)))
 
-	workDir, _ = filepath.EvalSymlinks(workDir)
+	// If we need to make a copy for staging of a revspec
+	if gitRevSpec != "" || staging {
+		workDir, err := ioutil.TempDir("", path.Base(os.Args[0]))
+		if err != nil {
+			return Workspace{}, err
+		}
 
-	if err := os.Setenv("GOPATH", strings.Join([]string{workDir, os.Getenv("GOPATH")}, ":")); err != nil {
-		return Workspace{}, err
+		workDir, _ = filepath.EvalSymlinks(workDir)
+
+		if err := os.Setenv("GOPATH", strings.Join([]string{workDir, os.Getenv("GOPATH")}, ":")); err != nil {
+			return Workspace{}, err
+		}
+
+		rootDir = path.Join(workDir, "src", rootPackage)
 	}
 
 	yellow := color.New(color.FgYellow)
@@ -62,7 +73,7 @@ func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string) 
 	updatedDirsChan := make(chan []string, 1)
 
 	go func() {
-		updatedFilesChan <- getUpdatedFiles(gitRoot, pathSpec, gitRevSpec)
+		updatedFilesChan <- getUpdatedFiles(gitRoot, pathSpec, gitRevSpec, staging)
 	}()
 
 	go func() {
@@ -70,11 +81,8 @@ func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string) 
 	}()
 
 	go func() {
-		updatedDirsChan <- getUpdatedDirs(gitRoot, pathSpec, gitRevSpec)
+		updatedDirsChan <- getUpdatedDirs(gitRoot, pathSpec, gitRevSpec, staging)
 	}()
-
-	rootPackage := strings.TrimSpace(MustRunCmd("sh", "-c", fmt.Sprintf("cd %s && go list -e .", gitRoot)))
-	rootDir := path.Join(workDir, "src", rootPackage)
 
 	// Try to create a shadow copy instead of checking out all the files
 	lndir := ""
@@ -90,8 +98,18 @@ func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string) 
 		}
 	}
 
-	// Check out the index unless we've been given a revSpec to test
-	if gitRevSpec == "" {
+	// Check out revSpec to test if we've been given one
+	if gitRevSpec != "" {
+		shas := MustRunCmd("git", "-C", gitRoot, "rev-list", gitRevSpec)
+		if len(shas) == 0 {
+			log.Fatalf(`Could not find any SHAS in range "%s"`, gitRevSpec)
+		}
+		mostRecentSha := strings.Fields(shas)[0]
+		if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
+			return Workspace{}, err
+		}
+		MustRunCmd("git", "-C", gitRoot, "--work-tree", rootDir, "checkout", mostRecentSha, "--", ".")
+	} else if staging {
 		if lndir != "" {
 			absGitRoot, err := filepath.Abs(gitRoot)
 			if err != nil {
@@ -102,24 +120,16 @@ func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string) 
 			}
 			// Start with a copy of the current workspace
 			MustRunCmd(lndir, append(lndirArgs, absGitRoot, rootDir)...)
+
 			// Copy out any files that have local changes from the index
-			cmd := fmt.Sprintf("git diff --name-only | git checkout-index --stdin -f --prefix %s/", rootDir)
+			cmd := fmt.Sprintf("git ls-files --modified --deleted | git checkout-index --stdin -f --prefix %s/", rootDir)
 			MustRunCmd("sh", "-c", cmd)
+
 			// Finally, copy out the files we want to test
 			MustRunCmd("git", "-C", gitRoot, "checkout-index", "-f", "--prefix", rootDir+"/")
 		} else {
 			MustRunCmd("git", "-C", gitRoot, "checkout-index", "-a", "--prefix", rootDir+"/")
 		}
-	} else {
-		shas := MustRunCmd("git", "-C", gitRoot, "rev-list", gitRevSpec)
-		if len(shas) == 0 {
-			log.Fatalf(`Could not find any SHAS in range "%s"`, gitRevSpec)
-		}
-		mostRecentSha := strings.Fields(shas)[0]
-		if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
-			return Workspace{}, err
-		}
-		MustRunCmd("git", "-C", gitRoot, "--work-tree", rootDir, "checkout", mostRecentSha, "--", ".")
 	}
 
 	if err := os.Chdir(rootDir); err != nil {
@@ -141,20 +151,21 @@ func Start(gitRoot string, pathSpec []string, useLndir bool, gitRevSpec string) 
 		UpdatedPackages:     utils.SortStrings(updatedPackages),
 		UpdatedTrees:        utils.SortStrings(utils.ShortestPrefixes(updatedDirs)),
 		LocallyChangedFiles: utils.SortStrings(locallyChangedFiles),
+		deleteOnClose:       gitRevSpec != "" || staging,
 	}, nil
 }
-
 func getLocallyChangedFiles(gitRoot string, pathSpec []string) []string {
 	return strings.Fields(MustRunCmd("git", append([]string{"-C", gitRoot, "diff", "--name-only", "--diff-filter=ACMR", "--"}, pathSpec...)...))
 }
 
-func getUpdatedFiles(gitRoot string, pathSpec []string, gitRevSpec string) []string {
+func getUpdatedFiles(gitRoot string, pathSpec []string, gitRevSpec string, staging bool) []string {
 	diffCmd := []string{"diff", "--name-only", "--diff-filter=ACMR"}
 	if gitRevSpec != "" {
 		diffCmd = append(diffCmd, gitRevSpec)
-
-	} else {
+	} else if staging {
 		diffCmd = append(diffCmd, "--cached")
+	} else {
+		diffCmd = append(diffCmd, "HEAD")
 	}
 	diffCmd = append(diffCmd, "--")
 	diffCmd = append(diffCmd, pathSpec...)
@@ -162,6 +173,9 @@ func getUpdatedFiles(gitRoot string, pathSpec []string, gitRevSpec string) []str
 }
 
 func (ws Workspace) Close() error {
+	if !ws.deleteOnClose {
+		return nil
+	}
 	return os.RemoveAll(ws.WorkDir)
 }
 
@@ -185,12 +199,14 @@ func getUpdatedPackages(rootPackage string, updatedDirs []string) []string {
 	return utils.StrKeys(updatedPackages)
 }
 
-func getUpdatedDirs(gitRoot string, pathSpec []string, gitRevSpec string) []string {
+func getUpdatedDirs(gitRoot string, pathSpec []string, gitRevSpec string, staging bool) []string {
 	diffCmd := []string{"diff", "--name-status", "--diff-filter=ACDMR"}
 	if gitRevSpec != "" {
 		diffCmd = append(diffCmd, gitRevSpec)
-	} else {
+	} else if staging {
 		diffCmd = append(diffCmd, "--cached")
+	} else {
+		diffCmd = append(diffCmd, "HEAD")
 	}
 	diffCmd = append(diffCmd, "--")
 	diffCmd = append(diffCmd, pathSpec...)
