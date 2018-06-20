@@ -23,14 +23,9 @@ script:
   - make test
   - go install ./cmd/gogitix
   # Some basic tests of the tool
-  - gogitix
-  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
-  - gogitix -s
-  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
-  - gogitix -c gogitix.yml
-  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
-  - gogitix HEAD^..HEAD
-  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
-  - gogitix HEAD
-  - if [ -e .git/index.lock ]; then echo "Waiting..."; sleep 1; fi
-  - gogitix HEAD^!
+  - gogitix && sleep 1
+  - gogitix -s && sleep 1
+  - gogitix -c gogitix.yml && sleep 1
+  - gogitix HEAD^..HEAD && sleep 1
+  - gogitix HEAD && sleep 1
+  - gogitix HEAD^! && sleep 1
