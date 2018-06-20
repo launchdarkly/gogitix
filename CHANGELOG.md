@@ -1,5 +1,12 @@
 # Change history
 
+## 2.1.00 - 2018-06-20
+
+### Changed
+
+- Default behavior is now to run on the current git root instead of staging (index).  To run on staging specify `-s`.
+- If no configuration file is provided, the `.gogitix.yml` file in the git root will be used (if it exists).
+
 ## 2.0.0 - 2018-06-17
 
 ### Changed
