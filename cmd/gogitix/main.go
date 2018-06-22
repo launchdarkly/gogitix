@@ -92,10 +92,9 @@ func main() {
 	if configFilePath == "" {
 		defaultConfigFilePath := filepath.Join(gitRoot, ".gogitix.yml")
 		color.Yellow("Using .gogitix.yml from git root")
-		if _, err := os.Stat(defaultConfigFilePath); err != nil {
-			lib.Failf(`Unable to read default config file "%s": %s`, defaultConfigFilePath, err)
+		if _, err := os.Stat(defaultConfigFilePath); err == nil {
+			configFilePath = defaultConfigFilePath
 		}
-		configFilePath = defaultConfigFilePath
 	}
 
 	configFileRaw := []byte(defaultFlow)
