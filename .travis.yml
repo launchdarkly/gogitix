@@ -30,3 +30,5 @@ script:
   - gogitix HEAD^..HEAD && sleep 1
   - gogitix HEAD && sleep 1
   - gogitix HEAD^! && sleep 1
+  - rm .gogitix.yml && gogitix  # try without a default config file
+
