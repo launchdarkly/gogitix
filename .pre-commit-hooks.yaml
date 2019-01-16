@@ -1,0 +1,7 @@
+- id: gogitix
+  name: gogitix
+  description: Git (index) hooks for go
+  entry: gogitix
+  types: [go]
+  language: golang
+  pass_filenames: false
